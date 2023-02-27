@@ -3,14 +3,22 @@ import { Suspense } from "react"
 import { Canvas, useLoader } from "@react-three/fiber"
 import { Environment, OrbitControls } from "@react-three/drei"
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader"
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader"
+import * as THREE from "three"
 
 const Model = () => {
+  const loader = new OBJLoader();
+  const scene = new THREE.Scene();
   // location of the 3D model
-  const gltf = useLoader(GLTFLoader, "/earth/mufi.glb");
+  // const gltf = useLoader(GLTFLoader, "/earth/mufi.glb");
+  const obj = loader.loadAsync("/earth/mufi_01.obj").then((obj) => {
+    console.log(obj);
+    scene.add(obj);
+  });
   return (
     <>
       {/* Use scale to control the size of the 3D model */}
-      <primitive object={gltf.scene} scale={7} />
+      <primitive object={scene} scale={7} />
     </>
   );
 };

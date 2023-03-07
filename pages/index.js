@@ -1,27 +1,104 @@
 import Head from 'next/head'
-import { Suspense } from "react"
-import { Canvas, useLoader } from "@react-three/fiber"
+import React, { useEffect, useState, useRef, Suspense } from 'react'
+import { Canvas, useLoader, useFrame } from "@react-three/fiber"
 import { Environment, OrbitControls } from "@react-three/drei"
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader"
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader"
 import * as THREE from "three"
 
-const Model = () => {
-  const loader = new OBJLoader();
-  const scene = new THREE.Scene();
-  // location of the 3D model
-  // const gltf = useLoader(GLTFLoader, "/earth/mufi.glb");
-  const obj = loader.loadAsync("/earth/mufi_01.obj").then((obj) => {
-    console.log(obj);
-    scene.add(obj);
-  });
+
+
+
+
+function Model() {
+
+  const group = useRef()
+  const { nodes, scene, materials, animations } = useLoader(GLTFLoader, "/earth/mufi_test07.glb")
+  const actions = useRef()
+  const [mixer] = useState(() => new THREE.AnimationMixer())
+  useFrame((state, delta) => mixer.update(delta))
+  useEffect(() => {
+    actions.current = { idle: mixer.clipAction(animations[0], group.current) }
+    actions.current.idle.play()
+    return () => animations.forEach((clip) => mixer.uncacheClip(clip))
+  }, [])
+
+  // scene.background = new THREE.Color({r: 255, g: 0, b: 0})
+  // scene.background = new THREE.Color(0xff0000);
+
+  // const loader = new THREE.TextureLoader();
+  // const backgroundTexture = loader.load('https://i.imgur.com/upWSJlY.jpg');
+  const scene2 = new THREE.Scene();
+  // scene.background = backgroundTexture;
+  scene2.background = new THREE.Color('lightblue')
+
+  scene2.add(scene);
+
   return (
-    <>
-      {/* Use scale to control the size of the 3D model */}
-      <primitive object={scene} scale={7} />
-    </>
-  );
-};
+    <group ref={group} dispose={null}>
+      <primitive
+        ref={group}
+        name="Object_0"
+        object={scene2}
+        scale={7}
+      />
+    </group>
+  )
+}
+
+
+
+function Background() {
+  const loader = new THREE.TextureLoader();
+  const backgroundTexture = loader.load('https://i.imgur.com/upWSJlY.jpg');
+  const scene = new THREE.Scene();
+  scene.background = backgroundTexture;
+  return <primitive object={scene} scale={7} />
+}
+
+// const Model = () => {
+//   const loader = new OBJLoader();
+//   const scene = new THREE.Scene();
+//   const mixer = useRef()
+//   // location of the 3D model
+//   const gltf = useLoader(GLTFLoader, "/earth/mufi_test07.glb");
+//   // const obj = loader.loadAsync("/earth/mufi_01.obj").then((obj) => {
+//   //   console.log(obj);
+//   //   scene.add(obj);
+//   // });
+//   useEffect(() => {
+//     if (gltf) {
+//       mixer.current = new THREE.AnimationMixer(gltf.scene)
+//       const action = mixer.current.clipAction(gltf.animations[0])
+//       console.log(gltf.animations)
+//       action.play()
+//     }
+//   }, [gltf])
+//   useFrame(({ clock }) => mixer.current && mixer.current.update(clock.getDelta()))
+//   return (
+//     <>
+//       {/* Use scale to control the size of the 3D model */}
+//       <primitive object={gltf.scene} scale={7} />
+//     </>
+//   );
+// };
+
+// const Model = () => {
+//   const mixer = useRef()
+//   const gltf = useLoader(GLTFLoader, '/earth/mufi_test07.glb')
+
+//   useEffect(() => {
+//     if (gltf) {
+//       mixer.current = new THREE.AnimationMixer(gltf.scene)
+//       const action = mixer.current.clipAction(gltf.animations[0])
+//       console.log(gltf.animations)
+//       // action.play()
+//     }
+//   }, [gltf])
+
+//   useFrame(({ clock }) => mixer.current && mixer.current.update(clock.getDelta()))
+//   return gltf ? <primitive object={gltf.scene} /> : null
+// }
 
 export default function Home() {
   return (
@@ -33,18 +110,30 @@ export default function Home() {
       </Head>
 
       <div className="globe">
-        <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 0, 4], fov: 50 }}>
-          <ambientLight intensity={0.7} />
-          <spotLight intensity={0.5} angle={0.1} penumbra={1} position={[10, 15, 10]} castShadow />
+        <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 0, 10], fov: 30 }}>
+          <ambientLight intensity={1} />
+          <spotLight intensity={1} angle={0.1} penumbra={1} position={[10, 15, 10]} />
+          <spotLight position={[1, -8, 1]} color={"lightblue"}  intensity={8000}/>
+          <spotLight position={[10, 6, 1]} color={"green"}  intensity={1000} />
+          <spotLight position={[-19, 6, 1]} color={"red"}  intensity={1000}/>
           <Suspense fallback={null}>
             <Model />
-            {/* To add environment effect to the model */}
-            <Environment preset="city" />
+            {/* <Environment preset="park" /> */}
+            <OrbitControls />
           </Suspense>
-          <OrbitControls autoRotate />
         </Canvas>
       </div>
 
     </div>
   )
 }
+
+// camera={{ position: [0, 0, -10], fov: 50 }}
+//       onCreated={({ camera, gl, scene }) => {
+//         camera.lookAt(new THREE.Vector3(0, 0, 0))
+//         scene.background = new THREE.Color('lightblue')
+//         gl.shadowMap.enabled = true
+//         gl.shadowMap.type = THREE.PCFSoftShadowMap
+//       }}>
+//       <ambientLight />
+//       <pointLight position={[10, 10, 10]} />
